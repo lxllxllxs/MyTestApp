@@ -9,7 +9,7 @@ import android.util.Log;
  */
 public class LogUtil {
     public static void i(String tag, String msg) {
-        if(Config.DEBUG) {
+        if(com.yiyekeji.mytestapp.utils.Config.DEBUG) {
             Log.i(tag, msg);
         }
     }
@@ -50,17 +50,9 @@ public class LogUtil {
     }
 
 
-    public static void d(String tag, String msg) {
-        if(Config.DEBUG) {
-            Log.d(tag, msg);
-        }
-    }
-
 
     public static void d(String tag, Object msg) {
-        if(Config.DEBUG) {
-            Log.d(tag, msg.toString());
-        }
+        Log.d(tag, msg.toString());
     }
 
 

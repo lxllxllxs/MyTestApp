@@ -10,13 +10,12 @@ import com.zhy.autolayout.AutoLayoutActivity;
 /**
  * Created by Administrator on 2016/10/23.
  */
-public  abstract  class BaseActivity extends AutoLayoutActivity implements View.OnClickListener {
+public   class BaseActivity extends AutoLayoutActivity implements View.OnClickListener {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
     }
 
-    public abstract void initView() ;
 
     private Toast shortToast, longToast ;
 

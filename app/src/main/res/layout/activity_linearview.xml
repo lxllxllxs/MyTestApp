@@ -6,8 +6,9 @@
 
     <com.yiyekeji.mytestapp.widget.LinearView
         android:id="@+id/lv_linear_chart"
+        android:layout_weight="1"
         android:layout_width="match_parent"
-        android:layout_height="1000px"/>
+        android:layout_height="0dp"/>
     <Button
         android:id="@+id/btn_set"
         android:padding="15px"

@@ -6,6 +6,6 @@
 
     <lecho.lib.hellocharts.view.LineChartView
         android:id="@+id/lcv"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_width="600px"
+        android:layout_height="600px"/>
 </LinearLayout>

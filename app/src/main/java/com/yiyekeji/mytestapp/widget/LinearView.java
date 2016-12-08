@@ -6,17 +6,19 @@ import android.graphics.Color;
 import android.graphics.CornerPathEffect;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.Typeface;
 import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.view.View;
 
 import com.yiyekeji.mytestapp.R;
+import com.yiyekeji.mytestapp.bean.AxisValue;
 import com.yiyekeji.mytestapp.utils.LogUtil;
 import com.zhy.autolayout.utils.ScreenUtils;
 
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * 流量统计折线图
@@ -40,56 +42,88 @@ public class LinearView extends View {
         init();
     }
     private int color_black,color_orange,color_gray;
-    private Paint mPaint;
-    private  Path path;
     int screenHeight,screenWeight;
-    private Map<Integer, Integer> coordinateMap = new LinkedHashMap<>();
+    private List<AxisValue> AxisList = new ArrayList<>();
     int XPoint=60;
     int YLength=700;
-    int YScale=600/10;
+    int YScale;
     int XLength=700;
     int XScale=600/10;
 
-    private void init(){
-        color_black=ContextCompat.getColor(context,R.color.gray_black);
-        color_orange=ContextCompat.getColor(context,R.color.orange);
-        color_gray=ContextCompat.getColor(context,R.color.gray);
+    private Paint axisPaint,lineaPaint;//两支笔
 
+    private void init(){
+        color_black=ContextCompat.getColor(context,R.color.black);
+        color_orange=ContextCompat.getColor(context, R.color.orange);
+        color_gray=ContextCompat.getColor(context,R.color.gray_black);
 
         screenWeight= ScreenUtils.getScreenSize(context,true)[0];
         screenHeight=ScreenUtils.getScreenSize(context,true)[1];
 
         XLength=screenWeight;
         YLength=screenWeight;
-
-        XScale=XLength/10;
-        YScale=YLength/10;
-
-        LogUtil.d("sdasd",screenHeight+"=="+screenHeight);
-        CornerPathEffect cornerPathEffect = new CornerPathEffect(50);
-        mPaint=new Paint();
-        mPaint.setColor(color_gray);
-        mPaint.setAntiAlias(true);
-        mPaint.setStyle(Paint.Style.STROKE);  //画笔风格
-        mPaint.setTextSize(26);
-        mPaint.setStrokeJoin(Paint.Join.ROUND);
-        mPaint.setStrokeWidth(2);           //画笔粗细
-        mPaint.setTextAlign(Paint.Align.CENTER);
-        mPaint.setPathEffect(cornerPathEffect);
-        path= new Path();
-/*        path.moveTo(50,50);
-        path.lineTo(60,150);
-
-        path.lineTo(70,150);
-        path.lineTo(140,300);
-        path.lineTo(210,10);
-        path.lineTo(250,50);
-        path.lineTo(290,150);*/
+        setAxisPaint();
+        setLinearPaint();
     }
 
-    public  void setLinkHashMap(LinkedHashMap<Integer,Integer> map){
-        this.coordinateMap=map;
+    private void setAxisPaint(){
+        axisPaint=new Paint();
+        axisPaint.setColor(color_gray);
+        axisPaint.setAntiAlias(true);
+        axisPaint.setStyle(Paint.Style.FILL);  //画笔风格
+        axisPaint.setTextSize(25);
+        axisPaint.setStrokeWidth(3);           //画笔粗细
+        axisPaint.setTextAlign(Paint.Align.CENTER);
+        axisPaint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.ITALIC));
+    }
+
+    private void setLinearPaint(){
+        CornerPathEffect cornerPathEffect = new CornerPathEffect(10);
+        lineaPaint=new Paint();
+        lineaPaint.setColor(color_orange);
+        lineaPaint.setAntiAlias(true);
+        lineaPaint.setStyle(Paint.Style.STROKE);  //画笔风格
+        lineaPaint.setTextSize(26);
+        lineaPaint.setStrokeJoin(Paint.Join.ROUND);
+        lineaPaint.setStrokeWidth(5);           //画笔粗细
+        lineaPaint.setTextAlign(Paint.Align.CENTER);
+    }
+
+
+    /**
+     * 先确定X轴总共有多长
+     * X的数据类型为日期 计算日期的区间和刻度数（List的size），
+     * @param list
+     */
+
+    public void setAxisList(List<AxisValue> list){
+        this.AxisList=list;
+        XScale=XLength/list.size();
+        setY();
+        setXLabel();
         invalidate();
+    }
+
+    private void setXLabel() {
+        for (AxisValue value : AxisList) {
+            String x = value.getXLabel();
+            value.setXLabel(x.substring(x.length()-5,x.length()));
+        }
+    }
+
+    /**计算YScale
+     * 每1单位的值对应的px值=YLength/（最大值*5/4）这样最高只到Y轴的5分4处
+     */
+    private void setY() {
+        List<Integer> list = new ArrayList<>();
+        for (AxisValue value : AxisList) {
+            list.add(value.getY());
+        }
+        Collections.sort(list);
+        int max=list.get(list.size()-1);
+        LogUtil.d("最大的数为：",max);
+        YScale=YLength/(max*3/2);
+        LogUtil.d("YScale为：",YScale);
     }
 
     /**
@@ -102,95 +136,38 @@ public class LinearView extends View {
         canvas.drawColor(Color.WHITE);
         drawYLine(canvas);
         drawXLine(canvas);
-        drawCircle(canvas);
+        drawLinearChar(canvas);
     }
+
+    private void drawLinearChar(Canvas canvas) {
+        Path path=new Path();
+        AxisValue axisValue;
+        for(int i=0;i<AxisList.size();i++){
+            axisValue = AxisList.get(i);
+            if (i==0){
+                path.moveTo(XScale*i+XPoint,YLength-axisValue.getY()*YScale);
+            }
+            path.lineTo(XScale*i+XPoint,YLength-axisValue.getY()*YScale);
+        }
+        canvas.drawPath(path,lineaPaint);
+
+    }
+
     private void drawYLine(Canvas canvas){
-        String[] YLabel={"a","b","c","d","e",
-                        "f","g","h","i","j","k"};
+        //从屏幕上从下画
+        canvas.drawLine(XPoint, 100, XPoint, YLength, axisPaint);
         //添加刻度和文字
-        for(int i=0; i  < 10; i++) {
-            mPaint.setColor(color_gray);
-            canvas.drawLine(XPoint, YLength-i*YScale,XLength, YLength-i*YScale, mPaint);  //刻度
-            mPaint.setColor(color_black);
-            canvas.drawText(YLabel[i], XPoint-20, YLength - i * YScale, mPaint);//文字
+        for(int i=0; i  < AxisList.size(); i++) {
+//            canvas.drawLine(XPoint, YLength-i*YScale,XLength, YLength-i*YScale, axisPaint);  //刻度
+            canvas.drawText(AxisList.get(i).getY()+"", XPoint-20, YLength - AxisList.get(i).getY()* YScale, axisPaint);//文字
         }
     }
     private void drawXLine(Canvas canvas){
-        String[] XLabel={"0","1","2","3","4","5",
-                "6","7","8","9","10","k"};
-        mPaint.setColor(ContextCompat.getColor(context,R.color.gray));
-        //画X轴
-        canvas.drawLine(XPoint, YLength, XLength+XPoint, YLength, mPaint);
+        canvas.drawLine(XPoint, YLength, XLength+XPoint, YLength, axisPaint);
         //添加刻度和文字
-        for(int i=0; i  < 10; i++) {
-            mPaint.setColor(color_black);
-            canvas.drawLine(XPoint+i*XScale,YLength, XPoint+i*XScale, YLength-30, mPaint);  //刻度
-            canvas.drawText(XLabel[i], XPoint+i*XScale, YLength+50, mPaint);//文字
+        for(int i=0; i  < AxisList.size(); i++) {
+//            canvas.drawLine(XPoint+i*XScale,YLength, XPoint+i*XScale, YLength-30, axisPaint);  //刻度
+            canvas.drawText(AxisList.get(i).getXLabel()+"", XPoint+i*XScale, YLength+50, axisPaint);//文字
         }
-    }
-
-    /**
-     * 把（50,700）当成原坐标
-     * 闭合坐标（750，700）
-     */
-
-    private  void drawCircle(Canvas canvas){
-        mPaint.setStyle(Paint.Style.STROKE);
-        mPaint.setStrokeWidth(6);
-        mPaint.setColor(ContextCompat.getColor(context,R.color.orange));
-        Path path=new Path();
-
-        int key=0,value=0;
-        boolean isFirst = true;
-        Iterator<Map.Entry<Integer,Integer>> iterator=coordinateMap.entrySet().iterator();
-        int firstX=0,firstY=0;
-        while (iterator.hasNext()) {
-            Map.Entry entry = (Map.Entry) iterator.next();
-            key= (int)entry.getKey();
-            value = (int)entry.getValue();
-            if (isFirst) {
-                isFirst = false;
-                firstX = key+XPoint;
-                firstY=YLength-value;
-                //画首线 用于填充完成封闭
-                mPaint.setColor(color_orange);
-                path.moveTo(XPoint, YLength);
-            }
-            path.lineTo(key+XPoint,YLength-value);
-//            canvas.drawCircle(key+XPoint,YLength-value,6,mPaint);
-        }
-        //第一期也要到底 才能使填充完美
-        path.lineTo(XLength,YLength);
-        canvas.drawPath(path, mPaint);
-        //覆盖画一条起始线 改色
-        Path path0=new Path();
-        path0.moveTo(XPoint,YLength);
-        path0.lineTo(firstX,firstY);
-        mPaint.setColor(color_gray);
-        canvas.drawPath(path0,mPaint);
-        //覆盖画一条完结线 改色
-        Path path2=new Path();
-        path2.moveTo(key+XPoint,YLength-value);
-        path2.lineTo(XLength,YLength);
-        canvas.drawPath(path2,mPaint);
-        //换色填充 应改为渐变色
-        path.close();
-        mPaint.setColor(ContextCompat.getColor(context,R.color.gray));
-        mPaint.setStyle(Paint.Style.FILL);
-        canvas.drawPath(path, mPaint);
-    }
-
-
-    private void setLinerMap(){
-        coordinateMap.put(0,0);
-        coordinateMap.put(1*XScale,1*YScale);
-        coordinateMap.put(2*XScale,2*YScale);
-        coordinateMap.put(3*XScale,3*YScale);
-        coordinateMap.put(4*XScale,4*YScale);
-        coordinateMap.put(5*XScale,5*YScale);
-        coordinateMap.put(6*XScale,6*YScale);
-        coordinateMap.put(7*XScale,7*YScale);
-        coordinateMap.put(8*XScale,8*YScale);
-        coordinateMap.put(9*XScale,9*YScale);
     }
 }

@@ -6,7 +6,7 @@ android {
 
     defaultConfig {
         applicationId "com.yiyekeji.mytestapp"
-        minSdkVersion 15
+        minSdkVersion 19
         targetSdkVersion 24
         versionCode 1
         versionName "1.0"
@@ -35,6 +35,6 @@ dependencies {
     compile 'org.greenrobot:eventbus:3.0.0'
     compile 'com.squareup.picasso:picasso:2.5.2'
     compile 'com.zhy:autolayout:1.4.5'
-
+    compile 'com.github.Idtk:SmallChart:v0.1.1'
     compile 'com.github.lecho:hellocharts-android:v1.5.8'
 }

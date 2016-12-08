@@ -2,6 +2,7 @@ package com.yiyekeji.mytestapp.ui;
 
 import android.graphics.Color;
 import android.os.Bundle;
+import android.support.v4.content.ContextCompat;
 import android.view.View;
 
 import com.yiyekeji.mytestapp.R;
@@ -30,24 +31,26 @@ public class HelloChartActivity extends BaseActivity {
     @InjectView(R.id.lcv)
     LineChartView lineChart;
 
-    String[] date = {"5-23", "5-22", "6-22", "5-23", "5-22", "2-22", "5-22", "4-22", "9-22", "10-22", "11-22", "12-22", "1-22", "6-22", "5-23", "5-22", "2-22", "5-22", "4-22", "9-22", "10-22", "11-22", "12-22", "4-22", "9-22", "10-22", "11-22", "zxc"};//X轴的标注
-    int[] score = {74, 22, 18, 79, 20, 74, 20, 74, 42, 90, 74, 42, 90, 50, 42, 90, 33, 10, 74, 22, 18, 79, 20, 74, 22, 18, 79, 20};//图表的数据
+    String[] date = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10"};//X轴的标注
+    int[] score = {74,22, 18, 79, 20, 74, 22, 18, 79, 20};//图表的数据
     private List<PointValue> mPointValues = new ArrayList<PointValue>();
     private List<AxisValue> mAxisXValues = new ArrayList<AxisValue>();
 
+    int color_black,color_orange;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_hello_chart);
         ButterKnife.inject(this);
+        initView();
+    }
+
+    public void initView() {
+        color_black = ContextCompat.getColor(this, R.color.black);
+        color_orange = ContextCompat.getColor(this, R.color.orange);
         getAxisXLables();//获取x轴的标注
         getAxisPoints();//获取坐标点
         initLineChart();//初始化
-    }
-
-    @Override
-    public void initView() {
-
     }
 
     /**
@@ -58,8 +61,8 @@ public class HelloChartActivity extends BaseActivity {
         List<Line> lines = new ArrayList<Line>();
         line.setShape(ValueShape.CIRCLE);//折线图上每个数据点的形状  这里是圆形 （有三种 ：ValueShape.SQUARE  ValueShape.CIRCLE  ValueShape.SQUARE）
         line.setCubic(true);//曲线是否平滑
-//	    line.setStrokeWidth(3);//线条的粗细，默认是3
-        line.setFilled(true);//是否填充曲线的面积
+	    line.setStrokeWidth(2);//线条的粗细，默认是3
+        line.setFilled(false);//是否填充曲线的面积
         line.setHasLabels(true);//曲线的数据坐标是否加上备注
 //		line.setHasLabelsOnlyForSelected(true);//点击数据坐标提示数据（设置了这个line.setHasLabels(true);就无效）
         line.setHasLines(true);//是否用直线显示。如果为false 则没有曲线只有点显示
@@ -71,25 +74,27 @@ public class HelloChartActivity extends BaseActivity {
         //坐标轴
         Axis axisX = new Axis(); //X轴
         axisX.setHasTiltedLabels(false);  //X轴下面坐标轴字体是斜的显示还是直的，true是斜的显示
-//	    axisX.setTextColor(Color.WHITE);  //设置字体颜色
-        axisX.setTextColor(Color.parseColor("#D6D6D9"));//灰色
-
-//	    axisX.setName("未来几天的天气");  //表格名称  X下方标注
+	    axisX.setTextColor(color_black);  //设置字体颜色
+	    axisX.setName("访客流量分析");  //表格名称  X下方标注
         axisX.setTextSize(11);//设置字体大小
-        axisX.setMaxLabelChars(7); //最多几个X轴坐标，意思就是你的缩放让X轴上数据的个数7<=x<=mAxisValues.length
+        axisX.setMaxLabelChars(9); //最多几个X轴坐标，意思就是你的缩放让X轴上数据的个数7<=x<=mAxisValues.length
         axisX.setValues(mAxisXValues);  //填充X轴的坐标名称
         axisX.setHasLines(true); //x 轴分割线
+
         data.setAxisXBottom(axisX); //x 轴在底部
 //	    data.setAxisXTop(axisX);  //x 轴在顶部
+
+
+
         Axis axisY = new Axis();  //Y轴
-        axisY.setName("aaa");//y轴左侧标注
+//        axisY.setName("aaa");//y轴左侧标注
         axisY.setTextSize(11);//设置字体大小
         data.setAxisYLeft(axisY);  //Y轴设置在左边
         //data.setAxisYRight(axisY);  //y轴设置在右边
         //设置行为属性，支持缩放、滑动以及平移
         lineChart.setInteractive(true);
         lineChart.setZoomType(ZoomType.HORIZONTAL);  //缩放类型，水平
-        lineChart.setMaxZoom((float) 3);//缩放比例
+        lineChart.setMaxZoom((float)1);//缩放比例
         lineChart.setLineChartData(data);
         lineChart.setVisibility(View.VISIBLE);
         /**注：下面的7，10只是代表一个数字去类比而已

@@ -8,12 +8,13 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.yiyekeji.mytestapp.R;
+import com.yiyekeji.mytestapp.ui.base.BaseActivity;
 import com.yiyekeji.mytestapp.widget.GradualScrollview;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 
-public class MainActivity extends AppCompatActivity implements GradualScrollview.MyScrollListener {
+public class MainActivity extends BaseActivity implements GradualScrollview.MyScrollListener {
 
     @InjectView(R.id.iv_head)
     ImageView ivHead;
