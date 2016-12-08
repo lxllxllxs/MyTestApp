@@ -45,40 +45,12 @@ public class TestLinearViewAty extends BaseActivity {
             axisValue.setY(random.nextInt(max)%(max-min+1) + min);
             list.add(axisValue);
         }*/
-        AxisValue axisValue = new AxisValue();
-        axisValue.setXLabel("2016-11-08").setY(10);
-
-        AxisValue axisValue1 = new AxisValue();
-        axisValue1.setXLabel("2016-11-09").setY(20);
-
-        AxisValue axisValue2 = new AxisValue();
-        axisValue2.setXLabel("2016-11-10").setY(30);
-
-        AxisValue axisValue3 = new AxisValue();
-        axisValue3.setXLabel("2016-11-11").setY(40);
-
-        AxisValue axisValue4 = new AxisValue();
-        axisValue4.setXLabel("2016-11-12").setY(60);
-
-        AxisValue axisValue5 = new AxisValue();
-        axisValue5.setXLabel("2016-11-13").setY(50);
-
-        AxisValue axisValue6 = new AxisValue();
-        axisValue6.setXLabel("2016-11-14").setY(30);
-
-        AxisValue axisValue7 = new AxisValue();
-        axisValue7.setXLabel("2016-11-15").setY(10);
-
-        list.add(axisValue);
-        list.add(axisValue1);
-        list.add(axisValue2);
-        list.add(axisValue3);
-        list.add(axisValue4);
-        list.add(axisValue5);
-        list.add(axisValue6);
-        list.add(axisValue7);
+        for (int i=1;i<=30;i++) {
+            AxisValue axisValue = new AxisValue();
+            axisValue.setXLabel("2016-11-"+i).setY(20*i);
+            list.add(axisValue);
+        }
         lvLinearChart.setAxisList(list);
-
     }
 
     @OnClick(R.id.btn_set)
