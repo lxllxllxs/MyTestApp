@@ -1,7 +1,6 @@
 package com.yiyekeji.mytestapp.ui;
 
 import android.os.Bundle;
-import android.widget.Button;
 
 import com.yiyekeji.mytestapp.R;
 import com.yiyekeji.mytestapp.bean.AxisValue;
@@ -14,7 +13,6 @@ import java.util.Random;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
-import butterknife.OnClick;
 
 /**
  * Created by Administrator on 2016/11/26.
@@ -22,8 +20,6 @@ import butterknife.OnClick;
 public class TestLinearViewAty extends BaseActivity {
     @InjectView(R.id.lv_linear_chart)
     LinearView lvLinearChart;
-    @InjectView(R.id.btn_set)
-    Button btnSet;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,8 +49,4 @@ public class TestLinearViewAty extends BaseActivity {
         lvLinearChart.setAxisList(list);
     }
 
-    @OnClick(R.id.btn_set)
-    public void onClick() {
-        initView();
-    }
 }
