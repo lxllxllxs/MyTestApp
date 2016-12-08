@@ -25,10 +25,23 @@ import java.util.List;
 /**
  * 流量统计折线图
  * 需要引入dp计算
+ * 最终传进的是px
  * Created by lxl on 2016/11/26.
  */
 public class LinearView extends View {
     private Context context;
+    private int color_black,color_orange,color_gray;
+    int screenHeight,screenWeight;
+    private List<AxisValue> AxisList = new ArrayList<>();
+    int XPoint=60;//原点
+    static  float YLength;//一定用float
+    float YScale;
+    static  int XLength;
+    int XScale;
+    private  boolean isSetting;
+    private Paint axisPaint,lineaPaint;//两支笔
+    DisplayMetrics dm;
+
     public LinearView(Context context) {
         super(context);
         this.context = context;
@@ -44,17 +57,43 @@ public class LinearView extends View {
         this.context = context;
         init();
     }
-    private int color_black,color_orange,color_gray;
-    int screenHeight,screenWeight;
-    private List<AxisValue> AxisList = new ArrayList<>();
-    int XPoint=60;//原点
-    int YLength;
-    float YScale;
-    int XLength;
-    int XScale;
-    private  boolean isSetting;
-    private Paint axisPaint,lineaPaint;//两支笔
-    DisplayMetrics dm;
+
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        int width=measureW(widthMeasureSpec);
+        float height=measureH(heightMeasureSpec);
+        XLength=width;
+        YLength=width;
+        refresh();
+        LogUtil.d(width+","+height);
+    }
+
+    private int measureH(int heightMeasureSpec) {
+        int mode = MeasureSpec.getMode(heightMeasureSpec);
+        int size = MeasureSpec.getSize(heightMeasureSpec);
+        if (mode == MeasureSpec.AT_MOST) {
+            return 500;
+        } else if (mode == MeasureSpec.EXACTLY) {
+            return size;
+        }else {
+            return  size;
+        }
+    }
+    private int measureW(int widthMeasureSpec) {
+        int mode = MeasureSpec.getMode(widthMeasureSpec);
+        int size = MeasureSpec.getSize(widthMeasureSpec);
+        if (mode == MeasureSpec.AT_MOST) {
+            return 500;
+        } else if (mode == MeasureSpec.EXACTLY) {
+            return size;
+        }else {
+            return  size;
+        }
+    }
+
+
+
     private void init(){
         color_black=ContextCompat.getColor(context,R.color.black);
         color_orange=ContextCompat.getColor(context, R.color.orange);
@@ -64,39 +103,15 @@ public class LinearView extends View {
         screenHeight=ScreenUtils.getScreenSize(context,true)[1];
 
         dm= new DisplayMetrics();
+
         ((Activity)context).getWindowManager().getDefaultDisplay().getMetrics(dm);
-        LogUtil.d("DisplayMetrics:", dm.densityDpi + "," + dm.scaledDensity);
-        XLength=screenWeight;
-        YLength=screenWeight;
-        LogUtil.d("AutoUtils测算出来的X和Y轴的长度分别为：", XLength + "," + YLength);
+        LogUtil.d("DisplayMetrics:", dm.densityDpi + "," + dm.scaledDensity+","+dm.densityDpi);
+    /*    XLength=dm.widthPixels;
+        YLength=dm.widthPixels;*/
+        LogUtil.d("AutoUtils测算出来的X和Y轴的长度分别为：", dm.widthPixels + "," + dm.heightPixels);
         setAxisPaint();
         setLinearPaint();
     }
-
-    private void setAxisPaint(){
-        axisPaint=new Paint();
-        axisPaint.setColor(color_gray);
-        axisPaint.setAntiAlias(true);
-        axisPaint.setStyle(Paint.Style.FILL);  //画笔风格
-        axisPaint.setTextSize(25);
-        axisPaint.setStrokeWidth(3);           //画笔粗细
-        axisPaint.setTextAlign(Paint.Align.CENTER);
-        axisPaint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.ITALIC));
-    }
-
-    private void setLinearPaint(){
-        CornerPathEffect cornerPathEffect = new CornerPathEffect(10);
-        lineaPaint=new Paint();
-        lineaPaint.setColor(color_orange);
-        lineaPaint.setAntiAlias(true);
-        lineaPaint.setStyle(Paint.Style.STROKE);  //画笔风格
-        lineaPaint.setTextSize(26);
-        lineaPaint.setStrokeJoin(Paint.Join.ROUND);
-        lineaPaint.setStrokeWidth(5);           //画笔粗细
-        lineaPaint.setTextAlign(Paint.Align.CENTER);
-    }
-
-
     /**
      * 先确定X轴总共有多长
      * X的数据类型为日期 计算日期的区间和刻度数（List的size），
@@ -105,6 +120,10 @@ public class LinearView extends View {
     public void setAxisList(List<AxisValue> list){
         this.AxisList=list;
         isSetting=true;
+        refresh();
+    }
+
+    private void refresh() {
         setScale();
         setXLabel();
         invalidate();
@@ -134,8 +153,7 @@ public class LinearView extends View {
         YMin=list.get(0);
         YMax=list.get(list.size()-1);
         LogUtil.d("最大的数为：",YMax);
-
-        YScale = YLength / YMax*(dm.scaledDensity/1);//注意这里得出的YLength和YScale使用了不同的计算单位 要进行换算处理
+        YScale =YLength /(YMax*8/7);//注意这里得出的YLength和YScale使用了不同的计算单位 要进行换算处理
         XScale=XLength/(list.size()*8/7);
         LogUtil.d("YScale为：",YScale);
     }
@@ -181,7 +199,7 @@ public class LinearView extends View {
         int laberNum = YMax / 5;
         LogUtil.d("可能过大的标签数为：", laberNum);
         //从屏幕下往上画
-        canvas.drawLine(XPoint, YLength, XPoint,100, axisPaint);
+        canvas.drawLine(XPoint, YLength, XPoint,0, axisPaint);
         //添加刻度和文字
         AxisValue axisValue;
         for(int i=0; i  < AxisList.size(); i++) {
@@ -191,7 +209,11 @@ public class LinearView extends View {
                 continue;
             }
 //            canvas.drawLine(XPoint, YLength-i*YScale,XLength, AxisList.get(i).getY()*YScale, axisPaint);  //刻度线
-            canvas.drawText(axisValue.getY()+"", XPoint-20, YLength - axisValue.getY()* YScale, axisPaint);//文字
+            //计算label需要的宽度
+            float textWidth= XPoint-5*(axisValue.getXLabel().length())-5;
+            float scale=YLength - axisValue.getY()* YScale;
+            canvas.drawText(axisValue.getYLabel()+"",textWidth
+                   ,scale , axisPaint);//文字
         }
     }
     private void drawXLine(Canvas canvas){
@@ -203,7 +225,33 @@ public class LinearView extends View {
             if (i!=0&&(i%5!=0&&i!=AxisList.size()-1)){
                 continue;
             }
-            canvas.drawText(AxisList.get(i).getXLabel()+"", XPoint+i*XScale, YLength+50, axisPaint);//文字
+            canvas.drawText(AxisList.get(i).getXLabel()+"", XPoint+i*XScale, YLength+30, axisPaint);//文字
         }
     }
+
+
+
+    private void setAxisPaint(){
+        axisPaint=new Paint();
+        axisPaint.setColor(color_gray);
+        axisPaint.setAntiAlias(true);
+        axisPaint.setStyle(Paint.Style.FILL);  //画笔风格
+        axisPaint.setTextSize(25);
+        axisPaint.setStrokeWidth(3);           //画笔粗细
+        axisPaint.setTextAlign(Paint.Align.CENTER);
+        axisPaint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.ITALIC));
+    }
+
+    private void setLinearPaint(){
+        CornerPathEffect cornerPathEffect = new CornerPathEffect(10);
+        lineaPaint=new Paint();
+        lineaPaint.setColor(color_orange);
+        lineaPaint.setAntiAlias(true);
+        lineaPaint.setStyle(Paint.Style.STROKE);  //画笔风格
+        lineaPaint.setTextSize(26);
+        lineaPaint.setStrokeJoin(Paint.Join.ROUND);
+        lineaPaint.setStrokeWidth(5);           //画笔粗细
+        lineaPaint.setTextAlign(Paint.Align.CENTER);
+    }
+
 }

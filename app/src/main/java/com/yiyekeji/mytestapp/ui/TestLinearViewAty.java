@@ -47,7 +47,7 @@ public class TestLinearViewAty extends BaseActivity {
         }*/
         for (int i=1;i<=30;i++) {
             AxisValue axisValue = new AxisValue();
-            axisValue.setXLabel("2016-11-"+i).setY(20*i);
+            axisValue.setXLabel("2016-11-"+i).setY(1*i);
             list.add(axisValue);
         }
         lvLinearChart.setAxisList(list);

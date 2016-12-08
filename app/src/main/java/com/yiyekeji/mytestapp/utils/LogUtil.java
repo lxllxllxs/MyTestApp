@@ -50,6 +50,9 @@ public class LogUtil {
     }
 
 
+    public static void d(Object msg) {
+        Log.d("LogUtil", msg.toString());
+    }
 
     public static void d(String tag, Object msg) {
         Log.d(tag, msg.toString());

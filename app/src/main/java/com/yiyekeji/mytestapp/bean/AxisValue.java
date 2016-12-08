@@ -12,6 +12,11 @@ public class AxisValue {
         return XLabel;
     }
 
+    public AxisValue(){
+        XLabel=X+"";
+
+    }
+
     public AxisValue setXLabel(Object XLabel) {
         this.XLabel = XLabel.toString();
         return this;
@@ -34,6 +39,7 @@ public class AxisValue {
 
     public AxisValue setX(int x) {
         X = x;
+        XLabel = X+"";
         return this;
     }
 
@@ -43,6 +49,7 @@ public class AxisValue {
 
     public AxisValue setY(int y) {
         Y = y;
+        YLabel = Y+"";
         return this;
     }
 }
