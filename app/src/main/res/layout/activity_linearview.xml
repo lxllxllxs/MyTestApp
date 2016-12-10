@@ -5,7 +5,7 @@
               android:layout_width="match_parent"
               android:layout_height="match_parent">
 
-    <com.yiyekeji.mytestapp.widget.LinearView
+    <com.yiyekeji.mytestapp.widget.LinearChartView
         android:id="@+id/lv_linear_chart"
         android:layout_width="match_parent"
         android:layout_height="500px"/>

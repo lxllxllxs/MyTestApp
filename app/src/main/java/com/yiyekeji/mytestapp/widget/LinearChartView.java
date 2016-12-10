@@ -6,7 +6,6 @@ import android.graphics.Color;
 import android.graphics.CornerPathEffect;
 import android.graphics.Paint;
 import android.graphics.Path;
-import android.graphics.Typeface;
 import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
@@ -14,7 +13,7 @@ import android.view.View;
 
 import com.yiyekeji.mytestapp.R;
 import com.yiyekeji.mytestapp.bean.AxisValue;
-import com.yiyekeji.mytestapp.utils.LogUtil;
+import com.yiyekeji.mytestapp.utils.LogUtils;
 import com.zhy.autolayout.utils.ScreenUtils;
 
 import java.util.ArrayList;
@@ -27,7 +26,7 @@ import java.util.List;
  * 最终传进的是px
  * Created by lxl on 2016/11/26.
  */
-public class LinearView extends View {
+public class LinearChartView extends View {
     private Context context;
     private int color_black,color_orange,color_gray;
     int screenHeight,screenWeight;
@@ -35,33 +34,36 @@ public class LinearView extends View {
     int XPoint=60,YPoint=60;//原点
     float YLength;//一定用float
     float YScale;
-    int XLength;
-    int XScale;
+    float XLength;
+    float XScale;
+    int paintWidth=3;//默认笔粗
+
+
     private Paint axisPaint,lineaPaint;//两支笔
     DisplayMetrics dm;
 
-    public LinearView(Context context) {
+    public LinearChartView(Context context) {
         super(context);
         this.context = context;
         init();
     }
-    public LinearView(Context context, AttributeSet attrs) {
+    public LinearChartView(Context context, AttributeSet attrs) {
         super(context, attrs);
         this.context = context;
         init();
     }
-    public LinearView(Context context, AttributeSet attrs, int defStyleAttr) {
+    public LinearChartView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         this.context = context;
         init();
     }
     private void init(){
-        color_black=ContextCompat.getColor(context,R.color.black);
-        color_orange=ContextCompat.getColor(context, R.color.orange);
-        color_gray=ContextCompat.getColor(context,R.color.gray_black);
+        color_black= ContextCompat.getColor(context, R.color.black);
+        color_orange= ContextCompat.getColor(context, R.color.orange);
+        color_gray= ContextCompat.getColor(context,R.color.gray_black);
 
         screenWeight= ScreenUtils.getScreenSize(context,true)[0];
-        screenHeight=ScreenUtils.getScreenSize(context,true)[1];
+        screenHeight= ScreenUtils.getScreenSize(context,true)[1];
 
         setAxisPaint();
         setLinearPaint();
@@ -76,14 +78,14 @@ public class LinearView extends View {
         XLength=width-XPoint;
         YLength=height-YPoint;
         refresh();
-        LogUtil.d(width+","+height);
+        LogUtils.d("onMeasure",width+","+height);
     }
 
     private int measureH(int heightMeasureSpec) {
         int mode = MeasureSpec.getMode(heightMeasureSpec);
         int size = MeasureSpec.getSize(heightMeasureSpec);
         if (mode == MeasureSpec.AT_MOST) {
-            return 500;
+            return 800;
         } else if (mode == MeasureSpec.EXACTLY) {
             return size;
         }else {
@@ -94,7 +96,7 @@ public class LinearView extends View {
         int mode = MeasureSpec.getMode(widthMeasureSpec);
         int size = MeasureSpec.getSize(widthMeasureSpec);
         if (mode == MeasureSpec.AT_MOST) {
-            return 500;
+            return 800;
         } else if (mode == MeasureSpec.EXACTLY) {
             return size;
         }else {
@@ -109,19 +111,22 @@ public class LinearView extends View {
      */
     public void setAxisList(List<AxisValue> list){
         this.AxisList=list;
+        needSetting = false;
         refresh();
     }
 
     private void refresh() {
         setScale();
-        setXLabel();
+        setLabel();
         invalidate();
     }
 
-    private void setXLabel() {
+    private void setLabel() {
         for (AxisValue value : AxisList) {
-            String x = value.getXLabel();
+            String x = value.getX().toString();
+            String y = value.getY()+"";
             value.setXLabel(x.substring(x.length()-5,x.length()));
+            value.setYLabel(y);
         }
     }
 
@@ -129,9 +134,14 @@ public class LinearView extends View {
      * 为了X和Y轴都预留空间，都只取到7/8处
      * 每1单位的值对应的px值=YLength/（最大值*8/7）这样最高只到Y轴的5分4处
      * 计算XScale
+     * BUG:在Y的最大值为2到6的情况下  Y轴刻度显示不全 原因：YMax没有用float
      */
-    int YMax,YMin;
+    float YMax,YMin;
+    boolean needSetting=true;
     private void setScale() {
+        if (needSetting){
+            return;
+        }
         List<Integer> list = new ArrayList<>();
         for (AxisValue value : AxisList) {
             list.add(value.getY());
@@ -139,10 +149,11 @@ public class LinearView extends View {
         Collections.sort(list);
         YMin=list.get(0);
         YMax=list.get(list.size()-1);
-        LogUtil.d("最大的数为：",YMax);
-        YScale =YLength /(YMax*8/7);//注意这里得出的YLength和YScale使用了不同的计算单位 要进行换算处理
+        LogUtils.d("最大的数为：",YMax);
+        //注意这里  YMax曾没有用float导致数据丢失
+        YScale =YLength /(YMax*8/7);
         XScale=XLength/(list.size()*8/7);
-        LogUtil.d("YScale为：",YScale);
+        LogUtils.d("YScale为：",YScale);
     }
 
     /**
@@ -169,8 +180,9 @@ public class LinearView extends View {
                 continue;
             }
             AxisValue axisValue = AxisList.get(i);
-            canvas.drawCircle(XPoint+i*XScale,YLength-axisValue.getY()*YScale,10,lineaPaint);
+            canvas.drawCircle(XPoint+i*XScale,YLength-axisValue.getY()*YScale,paintWidth*2,lineaPaint);
         }
+        lineaPaint.setStyle(Paint.Style.STROKE);
     }
 
     /**
@@ -184,8 +196,10 @@ public class LinearView extends View {
             axisValue = AxisList.get(i);
             if (i==0){
                 path.moveTo(XScale*i+XPoint,YLength-axisValue.getY()*YScale);
+                continue;
             }
             path.lineTo(XScale*i+XPoint,YLength-axisValue.getY()*YScale);
+
         }
         canvas.drawPath(path,lineaPaint);
     }
@@ -196,26 +210,26 @@ public class LinearView extends View {
      * @param canvas
      */
     private void drawYLine(Canvas canvas){
-        int laberNum = YMax / 5;
-        LogUtil.d("可能过大的标签数为：", laberNum);
+        float laberNum = YMax>10?YMax / 5:1;
+        LogUtils.d("可能过大的标签数为：", laberNum);
         //从屏幕下往上画
         canvas.drawLine(XPoint, YLength, XPoint,0, axisPaint);
         //添加刻度和文字
         AxisValue axisValue;
-        for(int i=0; i  < AxisList.size(); i++) {
-            axisValue=AxisList.get(i);
-            //不能是第一个 和最后一个
-            if (i!=0&&(axisValue.getY()%laberNum!=0)&&i!=AxisList.size()-1){
+        for(int i=0; i  <=YMax; i++) {
+            //不能是第一个 和最后一个值（最大值）
+            if (i!=0&&(i%laberNum!=0&&i!=YMax)){
                 continue;
             }
 //            canvas.drawLine(XPoint, YLength-i*YScale,XLength, AxisList.get(i).getY()*YScale, axisPaint);  //刻度线
             //计算label需要的宽度
-            float textWidth= XPoint-5*(axisValue.getXLabel().length())-5;
-            float scale=YLength - axisValue.getY()* YScale;
-            canvas.drawText(axisValue.getYLabel()+"",textWidth
-                   ,scale , axisPaint);//文字
+            float textWidth= XPoint-5*(String.valueOf(i).length())-5;
+            float scale=YLength - i* YScale;
+                canvas.drawText(i+"",textWidth,scale , axisPaint);//文字
         }
     }
+
+
     private void drawXLine(Canvas canvas){
         canvas.drawLine(XPoint, YLength, XLength, YLength, axisPaint);
         //添加刻度和文字 因为固定为30个刻度 所以应该隔五个才标一次
@@ -236,21 +250,21 @@ public class LinearView extends View {
         axisPaint.setAntiAlias(true);
         axisPaint.setStyle(Paint.Style.FILL);  //画笔风格
         axisPaint.setTextSize(25);
-        axisPaint.setStrokeWidth(3);           //画笔粗细
+        axisPaint.setStrokeWidth(paintWidth);           //画笔粗细
         axisPaint.setTextAlign(Paint.Align.CENTER);
-        axisPaint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.ITALIC));
     }
 
     private void setLinearPaint(){
-        CornerPathEffect cornerPathEffect = new CornerPathEffect(10);
+        CornerPathEffect cornerPathEffect = new CornerPathEffect(paintWidth*2);
         lineaPaint=new Paint();
         lineaPaint.setColor(color_orange);
         lineaPaint.setAntiAlias(true);
         lineaPaint.setStyle(Paint.Style.STROKE);  //画笔风格
         lineaPaint.setTextSize(26);
         lineaPaint.setStrokeJoin(Paint.Join.ROUND);
-        lineaPaint.setStrokeWidth(5);           //画笔粗细
+        lineaPaint.setStrokeWidth(paintWidth);           //画笔粗细
         lineaPaint.setTextAlign(Paint.Align.CENTER);
+        lineaPaint.setPathEffect(cornerPathEffect);
     }
 
 }

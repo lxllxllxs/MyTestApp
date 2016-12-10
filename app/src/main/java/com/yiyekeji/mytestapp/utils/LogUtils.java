@@ -7,7 +7,7 @@ import android.util.Log;
 /**
  * Created by zhouyaozhong on 15/12/2.
  */
-public class LogUtil {
+public class LogUtils {
     public static void i(String tag, String msg) {
         if(com.yiyekeji.mytestapp.utils.Config.DEBUG) {
             Log.i(tag, msg);
@@ -51,7 +51,7 @@ public class LogUtil {
 
 
     public static void d(Object msg) {
-        Log.d("LogUtil", msg.toString());
+        Log.d("LogUtils", msg.toString());
     }
 
     public static void d(String tag, Object msg) {
