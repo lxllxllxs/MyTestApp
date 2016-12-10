@@ -9,6 +9,7 @@ import android.util.AttributeSet;
 import android.view.View;
 
 import com.yiyekeji.mytestapp.bean.Pie;
+import com.yiyekeji.mytestapp.utils.LogUtils;
 import com.zhy.autolayout.utils.ScreenUtils;
 
 import java.util.ArrayList;
@@ -107,9 +108,18 @@ public class PieChartView extends View {
         canvas.drawCircle(origin[0],origin[1],inRadius,circlePaint);
     }
 
+    final  float ANGLE=360;
     private void drawArc(Canvas canvas) {
-        circlePaint.setColor(Color.YELLOW);
-        canvas.drawArc(rectF, 0, 90, true, circlePaint);
+        for (int i=0;i<datas.size();i++) {
+            Pie pie = datas.get(i);
+            circlePaint.setColor(Color.parseColor(pie.getColor()));
+            if (i==0) {
+                canvas.drawArc(rectF,0,  pie.getPercent()*ANGLE, true, circlePaint);
+                continue;
+            }
+            Pie pie2 = datas.get(i-1);
+            canvas.drawArc(rectF,pie2.getPercent()*ANGLE, pie.getPercent()*ANGLE, true, circlePaint);
+        }
     }
 
     /**
@@ -125,8 +135,11 @@ public class PieChartView extends View {
         for (Pie pie:datas){
             pie.setPercent(total);
             String hex=Long.toHexString((long) (Math.random() * (16777215 - 100) + 100));
+            LogUtils.d("RandomColor",hex);
             pie.setColor(hex);
         }
+
+        invalidate();
     }
 
     private float measureH(int heightMeasureSpec) {

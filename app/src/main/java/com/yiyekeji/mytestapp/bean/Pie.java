@@ -11,7 +11,7 @@ import android.os.Parcelable;
  */
 public class Pie implements Parcelable {
     private String color;
-    private double percent;
+    private float percent;
     private  String label;
     private  int number;
 
@@ -23,7 +23,7 @@ public class Pie implements Parcelable {
         this.color = color;
     }
 
-    public double getPercent() {
+    public float getPercent() {
         return percent;
     }
 
@@ -47,31 +47,30 @@ public class Pie implements Parcelable {
         this.number = number;
     }
 
+    public Pie() {
+    }
+
     @Override
     public int describeContents() {
-
         return 0;
     }
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(this.color);
-        dest.writeDouble(this.percent);
+        dest.writeFloat(this.percent);
         dest.writeString(this.label);
         dest.writeInt(this.number);
     }
 
-    public Pie() {
-    }
-
     protected Pie(Parcel in) {
         this.color = in.readString();
-        this.percent = in.readDouble();
+        this.percent = in.readFloat();
         this.label = in.readString();
         this.number = in.readInt();
     }
 
-    public static final Parcelable.Creator<Pie> CREATOR = new Parcelable.Creator<Pie>() {
+    public static final Creator<Pie> CREATOR = new Creator<Pie>() {
         @Override
         public Pie createFromParcel(Parcel source) {
             return new Pie(source);
