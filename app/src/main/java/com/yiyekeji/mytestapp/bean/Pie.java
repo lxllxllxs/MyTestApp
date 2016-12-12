@@ -13,7 +13,7 @@ public class Pie implements Parcelable {
     private String color;
     private float percent;
     private  String label;
-    private  int number;
+    private  float number;
 
     public String getColor() {
         return color;
@@ -27,7 +27,7 @@ public class Pie implements Parcelable {
         return percent;
     }
 
-    public void setPercent(int total) {
+    public void setPercent(float total) {
         this.percent = number/total;
     }
 
@@ -39,7 +39,7 @@ public class Pie implements Parcelable {
         this.label = label;
     }
 
-    public int getNumber() {
+    public float getNumber() {
         return number;
     }
 
@@ -60,14 +60,14 @@ public class Pie implements Parcelable {
         dest.writeString(this.color);
         dest.writeFloat(this.percent);
         dest.writeString(this.label);
-        dest.writeInt(this.number);
+        dest.writeFloat(this.number);
     }
 
     protected Pie(Parcel in) {
         this.color = in.readString();
         this.percent = in.readFloat();
         this.label = in.readString();
-        this.number = in.readInt();
+        this.number = in.readFloat();
     }
 
     public static final Creator<Pie> CREATOR = new Creator<Pie>() {

@@ -8,6 +8,7 @@ import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.view.View;
 
+import com.github.lzyzsd.randomcolor.RandomColor;
 import com.yiyekeji.mytestapp.bean.Pie;
 import com.yiyekeji.mytestapp.utils.LogUtils;
 import com.zhy.autolayout.utils.ScreenUtils;
@@ -22,6 +23,8 @@ public class PieChartView extends View {
     private float outRadius,inRadius;
     private Paint circlePaint;
     private Context context;
+    private boolean isReady=false;
+
     public PieChartView(Context context) {
         super(context);
         this.context = context;
@@ -64,8 +67,8 @@ public class PieChartView extends View {
         float diameter=width>height?height:width;
         origin[0]=width/2;
         origin[1]=height/2;
-        //外圆的直径为 较小值的2/3,内圆的直径为外圆的2/3
-        outRadius=diameter/2;
+
+        outRadius=diameter/4;
         inRadius=outRadius/3;
     }
 
@@ -95,30 +98,38 @@ public class PieChartView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
+        if (!isReady){
+            return;
+        }
         drawCircle(canvas);
-        circlePaint.setColor(Color.RED);
-//        canvas.drawRect(rectF, circlePaint);
-        drawArc(canvas);
+//        drawArc(canvas);
     }
     private void drawCircle(Canvas canvas){
         //画外圆
         canvas.drawCircle(origin[0],origin[1],outRadius,circlePaint);
-        //画内圆
+/*        //画内圆
         circlePaint.setColor(Color.WHITE);
-        canvas.drawCircle(origin[0],origin[1],inRadius,circlePaint);
+        canvas.drawCircle(origin[0],origin[1],inRadius,circlePaint);*/
     }
 
     final  float ANGLE=360;
+
+    /**
+     * 画弧要记得角度的累加
+     *
+     * @param canvas
+     */
+    RandomColor rc = new RandomColor();
     private void drawArc(Canvas canvas) {
+        float totalAngle=0;
         for (int i=0;i<datas.size();i++) {
             Pie pie = datas.get(i);
-            circlePaint.setColor(Color.parseColor(pie.getColor()));
-            if (i==0) {
-                canvas.drawArc(rectF,0,  pie.getPercent()*ANGLE, true, circlePaint);
-                continue;
-            }
-            Pie pie2 = datas.get(i-1);
-            canvas.drawArc(rectF,pie2.getPercent()*ANGLE, pie.getPercent()*ANGLE, true, circlePaint);
+            circlePaint.setColor(rc.randomColor());
+            canvas.drawArc(rectF,
+                    totalAngle,
+                    pie.getPercent() * ANGLE,
+                    true, circlePaint);
+            totalAngle = totalAngle + pie.getPercent()*ANGLE;
         }
     }
 
@@ -128,17 +139,18 @@ public class PieChartView extends View {
     private List<Pie> datas = new ArrayList<>();
     public void setDatas(List<Pie> list){
         this.datas=list;
-        int total=0;
+        float total=0;
         for (Pie pie : datas) {
             total=total+pie.getNumber();
         }
+
         for (Pie pie:datas){
             pie.setPercent(total);
-            String hex=Long.toHexString((long) (Math.random() * (16777215 - 100) + 100));
-            LogUtils.d("RandomColor",hex);
+            String hex="#"+Long.toHexString((long) (Math.random() * (16777215 - 100) + 100));
             pie.setColor(hex);
+            LogUtils.d("setPercent", pie.getPercent());
         }
-
+        isReady = true;
         invalidate();
     }
 
