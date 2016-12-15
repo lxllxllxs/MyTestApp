@@ -105,21 +105,51 @@ public class PieChartView extends View {
         if (!isReady){
             return;
         }
-//        drawOutCircle(canvas);
+        //为了校准用的矩形
         circlePaint.setColor(Color.WHITE);
         canvas.drawRect(rectF,circlePaint);
+
         drawArc(canvas);
         drawInCircle(canvas);
+        drawLabel(canvas);
+    }
+
+    /**
+     * 画色块统计
+     * 色块从左画 色块左边为RectF的Left 第一个距RectF的bottom为二分一的inRadius
+     * 每个色块宽高均为inRadius的半径的四分之一
+     * 间隔为一个色块高度
+     * @param canvas
+     */
+    private void drawLabel(Canvas canvas) {
+        int count=1;//要从1开始
+        for (Pie pie : datas) {
+            circlePaint.setColor(pie.getColor());
+            RectF rect = new RectF();
+            rect.left=rectF.left;
+            rect.top=rectF.bottom+count*(inRadius/2);
+            rect.bottom=rect.top+inRadius/4;
+            rect.right=rect.left+inRadius/4;
+            canvas.drawRect(rect,circlePaint);
+
+            circlePaint.setColor(Color.BLACK);
+            circlePaint.setTextSize(25);
+            Paint.FontMetricsInt fontMetrics = circlePaint.getFontMetricsInt();
+            // 转载请注明出处：http://blog.csdn.net/hursing
+
+            int baseline= (int) (rect.bottom + rect.top - fontMetrics.bottom - fontMetrics.top) / 2;
+            canvas.drawText(pie.getLabel(), rect.right+inRadius/4, baseline, circlePaint);
+
+            count++;
+
+        }
+
     }
 
     //画内圆 当作裁剪
     private void drawInCircle(Canvas canvas) {
         circlePaint.setColor(Color.WHITE);
         canvas.drawCircle(origin[0],origin[1],inRadius,circlePaint);
-    }
-    //画外圆
-    private void drawOutCircle(Canvas canvas){
-        canvas.drawCircle(origin[0],origin[1],outRadius,circlePaint);
     }
     /**
      * 画弧要记得角度的累加
