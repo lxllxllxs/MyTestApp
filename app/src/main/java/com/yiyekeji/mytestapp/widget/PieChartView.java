@@ -116,7 +116,7 @@ public class PieChartView extends View {
 
     /**
      * 画色块统计
-     * 色块从左画 色块左边为RectF的Left 第一个距RectF的bottom为二分一的inRadius
+     * 色块从左到右从上到下画 色块左边为RectF的Left 第一个距RectF的bottom为二分一的inRadius
      * 每个色块宽高均为inRadius的半径的四分之一
      * 间隔为一个色块高度
      * @param canvas
@@ -126,20 +126,26 @@ public class PieChartView extends View {
         for (Pie pie : datas) {
             circlePaint.setColor(pie.getColor());
             RectF rect = new RectF();
-            rect.left=rectF.left;
-            rect.top=rectF.bottom+count*(inRadius/2);
-            rect.bottom=rect.top+inRadius/4;
-            rect.right=rect.left+inRadius/4;
-            canvas.drawRect(rect,circlePaint);
-
+            if (count%2!=0) {
+                rect.left = rectF.left;
+                rect.top = rectF.bottom + ((count+1)/2) * (inRadius / 2);
+                rect.bottom = rect.top + inRadius / 4;
+                rect.right = rect.left + inRadius / 4;
+                LogUtils.d("drawLabel","左");
+            }else {
+                rect.left = origin[0];//画右边的坐标有圆心的x轴为起点
+                rect.top = rectF.bottom + (count/2) * (inRadius / 2);
+                rect.bottom = rect.top + inRadius / 4;
+                rect.right = origin[0] + inRadius / 4;
+                LogUtils.d("drawLabel","右");
+            }
+            canvas.drawRect(rect, circlePaint);
             circlePaint.setColor(Color.BLACK);
             circlePaint.setTextSize(25);
             Paint.FontMetricsInt fontMetrics = circlePaint.getFontMetricsInt();
             // 转载请注明出处：http://blog.csdn.net/hursing
-
-            int baseline= (int) (rect.bottom + rect.top - fontMetrics.bottom - fontMetrics.top) / 2;
-            canvas.drawText(pie.getLabel(), rect.right+inRadius/4, baseline, circlePaint);
-
+            int baseline = (int) (rect.bottom + rect.top - fontMetrics.bottom - fontMetrics.top) / 2;
+            canvas.drawText(pie.getLabel(), rect.right + inRadius / 4, baseline, circlePaint);
             count++;
 
         }
