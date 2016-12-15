@@ -210,22 +210,22 @@ public class LinearChartView extends View {
      * @param canvas
      */
     private void drawYLine(Canvas canvas){
-        float laberNum = YMax>10?YMax / 5:1;
+        float laberNum =YMax>5?YMax / 5:1;
         LogUtils.d("可能过大的标签数为：", laberNum);
         //从屏幕下往上画
         canvas.drawLine(XPoint, YLength, XPoint,0, axisPaint);
         //添加刻度和文字
         AxisValue axisValue;
-        for(int i=0; i  <=YMax; i++) {
+        for(int i=0; i  <=5; i++) {
             //不能是第一个 和最后一个值（最大值）
-            if (i!=0&&(i%laberNum!=0&&i!=YMax)){
+        /*    if (i!=0&&(i%laberNum!=0&&i!=YMax)){
                 continue;
-            }
+            }*/
 //            canvas.drawLine(XPoint, YLength-i*YScale,XLength, AxisList.get(i).getY()*YScale, axisPaint);  //刻度线
             //计算label需要的宽度
-            float textWidth= XPoint-5*(String.valueOf(i).length())-5;
-            float scale=YLength - i* YScale;
-                canvas.drawText(i+"",textWidth,scale , axisPaint);//文字
+            float textWidth= XPoint-5*(String.valueOf((int)(i*laberNum)).length())-5;
+            float scale=YLength - YScale*i*laberNum;
+            canvas.drawText((int)(i*laberNum)+"",textWidth,scale , axisPaint);//文字
         }
     }
 

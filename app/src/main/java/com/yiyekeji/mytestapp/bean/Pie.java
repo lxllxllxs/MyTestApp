@@ -9,17 +9,17 @@ import android.os.Parcelable;
  * 颜色、占比（用来存计算之后的），数量，标签
  *
  */
-public class Pie implements Parcelable {
-    private String color;
+public class Pie implements Parcelable , Comparable<Pie> {
+    private int color;
     private float percent;
     private  String label;
     private  float number;
 
-    public String getColor() {
+    public int getColor() {
         return color;
     }
 
-    public void setColor(String color) {
+    public void setColor(int color) {
         this.color = color;
     }
 
@@ -30,6 +30,11 @@ public class Pie implements Parcelable {
     public void setPercent(float total) {
         this.percent = number/total;
     }
+
+    public void setDirectPercent(float percent) {
+        this.percent = percent;
+    }
+
 
     public String getLabel() {
         return label;
@@ -51,20 +56,31 @@ public class Pie implements Parcelable {
     }
 
     @Override
+    public int compareTo(Pie o) {
+        if (percent < o.getPercent()) {
+            return -1;
+        } else if (percent>o.getPercent()){
+            return 1;
+        }else {
+            return 0;
+        }
+    }
+
+    @Override
     public int describeContents() {
         return 0;
     }
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(this.color);
+        dest.writeInt(this.color);
         dest.writeFloat(this.percent);
         dest.writeString(this.label);
         dest.writeFloat(this.number);
     }
 
     protected Pie(Parcel in) {
-        this.color = in.readString();
+        this.color = in.readInt();
         this.percent = in.readFloat();
         this.label = in.readString();
         this.number = in.readFloat();
