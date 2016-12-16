@@ -21,6 +21,8 @@ import java.util.List;
 
 /**
  * Created by lxl on 2016/12/10.
+ *
+ * 暂时应该只关注以宽为基点的设计
  */
 public class PieChartView extends View {
     private float outRadius,inRadius;
@@ -111,6 +113,11 @@ public class PieChartView extends View {
         if (!isReady){
             return;
         }
+        if (datas.size() >= 13 && (wholeLableWidth <rectF.width()/2)) {
+            mLabelType = LABEL_TYPE_DOUBLE;
+        } else {
+            mLabelType = LABEL_TYPE_SINGLE;
+        }
         //为了校准用的矩形
         circlePaint.setColor(Color.WHITE);
         canvas.drawRect(rectF,circlePaint);
@@ -151,7 +158,8 @@ public class PieChartView extends View {
                         rect.right = rect.left + inRadius / 4;
                         LogUtils.d("drawLabel", "左");
                     } else {
-                        rect.left = origin[0] ;
+                        //右边应该以左边末+2个方块 +label里的3个方块
+                        rect.left = 5*inRadius/4+wholeLableWidth+rectF.left;
                         rect.top = rectF.bottom + (count / 2) * (inRadius / 2);
                         rect.bottom = rect.top + inRadius / 4;
                         rect.right = rect.left + inRadius / 4;
@@ -223,6 +231,7 @@ public class PieChartView extends View {
      * 注意在此之前必须先设置paint的textSize
      * 测量
      */
+    private  float wholeLableWidth;
     private  float labelWidth,numberWidht,percentWidth;
     private List<Pie> datas = new ArrayList<>();
     public void setDatas(List<Pie> list){
@@ -263,15 +272,12 @@ public class PieChartView extends View {
             LogUtils.d("setPercent", datas.get(i).getPercent());
         }
         /**
-         * 如果小于13个Pie或整label宽度超过RectF/2采用单列
+         * 如果小于13个Pie或整label宽度超过控件的/2采用单列
          * 如果大于或等于 13个Pie,采用双列
          */
-        float wholeLableWidth = 4 * inRadius / 4 + labelWidth + numberWidht + percentWidth;
-        if (datas.size() >= 13 && (wholeLableWidth < rectF.width())) {
-            mLabelType = LABEL_TYPE_DOUBLE;
-        } else {
-            mLabelType = LABEL_TYPE_SINGLE;
-        }
+
+        wholeLableWidth  = 4 * inRadius / 4 + labelWidth + numberWidht + percentWidth;
+        LogUtils.d("maxWidth", wholeLableWidth + "==" + rectF.width());
         isReady = true;
         invalidate();
     }
