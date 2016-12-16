@@ -88,23 +88,25 @@ public class PieChartView extends View {
     /**
      * 设置画弧的约束矩形
      * 让改矩形中心与圆心重合
+     *
+     * 暂时只关注 width
      */
     private void setRectF(float width,float height) {
        //如果是宽>高  考虑left right的偏移 ,相反则同理
         float offset=Math.abs(height/2-width)/2;
-        if (width>height){
+//        if (width>height){
             //取一个正方形 为什么 500*500px的 测出来高度大于宽度？
             rectF.bottom =height/2;//减去底部差值
             rectF.top=0;//减去顶部差值
             rectF.left=offset;
             rectF.right=width-offset;
-        }else {
+     /*   }else {
             //取一个正方形 为什么 500*500px的 测出来高度大于宽度？
             rectF.bottom =height/2;//减去底部差值
             rectF.top=0;//减去顶部差值
             rectF.left=offset;
             rectF.right=width-offset;
-        }
+        }*/
     }
 
     @Override
@@ -192,7 +194,7 @@ public class PieChartView extends View {
             canvas.drawText(number, textAnchor+2*spacing+labelWidth, baseline, circlePaint);
 
             DecimalFormat decimalFormat=new DecimalFormat("#.##");//构造方法的字符格式这里如果小数不足2位,会以0补足.
-            String percent=decimalFormat.format(pie.getPercent());//format 返回的是字符串
+            String percent=decimalFormat.format(pie.getPercent()*100);//format 返回的是字符串
 
             canvas.drawText(percent,textAnchor+2*spacing+labelWidth+numberWidht, baseline, circlePaint);
             count++;
