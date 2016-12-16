@@ -58,9 +58,9 @@ public class Pie implements Parcelable , Comparable<Pie> {
     @Override
     public int compareTo(Pie o) {
         if (percent < o.getPercent()) {
-            return -1;
-        } else if (percent>o.getPercent()){
             return 1;
+        } else if (percent>o.getPercent()){
+            return -1;
         }else {
             return 0;
         }

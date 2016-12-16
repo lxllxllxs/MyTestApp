@@ -50,6 +50,7 @@ public class PieChartView extends View {
         circlePaint = new Paint();
         circlePaint.setStyle(Paint.Style.FILL);
         circlePaint.setColor(Color.GREEN);
+        circlePaint.setAntiAlias(true);
     }
 
 
@@ -116,28 +117,45 @@ public class PieChartView extends View {
 
     /**
      * 画色块统计
-     * 色块从左到右从上到下画 色块左边为RectF的Left 第一个距RectF的bottom为二分一的inRadius
-     * 每个色块宽高均为inRadius的半径的四分之一
+     * 色块从左到右从上到下画 色块左边为内圆的的Left 第一个色块距RectF bottom值为一半的inRadius
+     * 每个色块宽高均为inRadius的四分之一
      * 间隔为一个色块高度
+     *
      * @param canvas
      */
+
+    private final  int LABEL_TYPE_SINGLE=0;
+    private final  int LABEL_TYPE_TWO=1;
+    private int mLabelType = LABEL_TYPE_SINGLE;
     private void drawLabel(Canvas canvas) {
+        RectF rect=null;
         int count=1;//要从1开始
         for (Pie pie : datas) {
             circlePaint.setColor(pie.getColor());
-            RectF rect = new RectF();
-            if (count%2!=0) {
-                rect.left = rectF.left;
-                rect.top = rectF.bottom + ((count+1)/2) * (inRadius / 2);
-                rect.bottom = rect.top + inRadius / 4;
-                rect.right = rect.left + inRadius / 4;
-                LogUtils.d("drawLabel","左");
-            }else {
-                rect.left = origin[0];//画右边的坐标有圆心的x轴为起点
-                rect.top = rectF.bottom + (count/2) * (inRadius / 2);
-                rect.bottom = rect.top + inRadius / 4;
-                rect.right = origin[0] + inRadius / 4;
-                LogUtils.d("drawLabel","右");
+            rect= new RectF();
+            switch (mLabelType) {
+                case LABEL_TYPE_TWO:
+                    if (count % 2 != 0) {
+                        rect.left = origin[0] - ((int) rectF.width()) / 4 - inRadius / 4;
+                        rect.top = rectF.bottom + ((count + 1) / 2) * (inRadius / 2);
+                        rect.bottom = rect.top + inRadius / 4;
+                        rect.right = rect.left + inRadius / 4;
+                        LogUtils.d("drawLabel", "左");
+                    } else {
+                        rect.left = origin[0] + ((int) rectF.width()) / 4;
+                        rect.top = rectF.bottom + (count / 2) * (inRadius / 2);
+                        rect.bottom = rect.top + inRadius / 4;
+                        rect.right = rect.left + inRadius / 4;
+                        LogUtils.d("drawLabel", "右");
+                    }
+                    break;
+                case LABEL_TYPE_SINGLE:
+                    rect.left = origin[0] - ((int) rectF.width()) / 4 - inRadius / 4;
+                    rect.top = rectF.bottom + count * (inRadius / 2);
+                    rect.bottom = rect.top + inRadius / 4;
+                    rect.right = rect.left + inRadius / 4;
+                    LogUtils.d("drawLabel", "单列居中");
+                    break;
             }
             canvas.drawRect(rect, circlePaint);
             circlePaint.setColor(Color.BLACK);
@@ -145,7 +163,9 @@ public class PieChartView extends View {
             Paint.FontMetricsInt fontMetrics = circlePaint.getFontMetricsInt();
             // 转载请注明出处：http://blog.csdn.net/hursing
             int baseline = (int) (rect.bottom + rect.top - fontMetrics.bottom - fontMetrics.top) / 2;
-            canvas.drawText(pie.getLabel(), rect.right + inRadius / 4, baseline, circlePaint);
+            String text=pie.getPercent()*100+"";
+            text=text.substring(0,text.indexOf(".")+3)+"%";
+            canvas.drawText(pie.getLabel()+"  "+(int)pie.getNumber()+"  "+text, rect.right + inRadius / 4, baseline, circlePaint);
             count++;
 
         }
@@ -178,6 +198,7 @@ public class PieChartView extends View {
     /**
      * 初始数据只要设置其数量和标签名
      */
+    private final int colorMax=0xffffff;
     RandomColor rc = new RandomColor();
     private List<Pie> datas = new ArrayList<>();
     public void setDatas(List<Pie> list){
@@ -189,23 +210,26 @@ public class PieChartView extends View {
         for (Pie pie : datas) {
             pie.setPercent(total);
         }
-        //排序
+        //排序 从大到小排序
         Collections.sort(datas);
         total=0;
         List<Pie> tempList = new ArrayList<>();
-        for (Pie pie:datas){
-            pie.setColor(rc.randomColor());
-        /*    if (total>=0.7){
-                pie.setColor(Color.BLACK);
-                pie.setLabel("其他");
-                pie.setDirectPercent(1 - total);
-                tempList.add(pie);
+
+        int colorScale = colorMax / datas.size();
+        //根据List大小获得固定差值的颜色集合，419430
+        for (int i=0; i<datas.size();i++){
+            int colors = rc.randomColor(i*colorScale,null,null);
+            datas.get(i).setColor(colors);
+            if (total>=0.95){
+                datas.get(i).setLabel("其 他");
+                datas.get(i).setDirectPercent(1 - total);
+                tempList.add(datas.get(i));
                 datas = tempList;
                 break;
-            }*/
-            tempList.add(pie);
-            total=total+pie.getPercent();
-            LogUtils.d("setPercent", pie.getPercent());
+            }
+            tempList.add(datas.get(i));
+            total=total+datas.get(i).getPercent();
+            LogUtils.d("setPercent", datas.get(i).getPercent());
         }
         isReady = true;
         invalidate();

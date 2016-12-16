@@ -8,7 +8,7 @@
     <com.yiyekeji.mytestapp.widget.PieChartView
         android:id="@+id/pieChartView"
         android:layout_gravity="center"
-        android:background="@color/theme_blue"
+        android:background="@color/white"
         android:layout_width="match_parent"
-        android:layout_height="1000px" />
+        android:layout_height="match_parent" />
 </LinearLayout>
