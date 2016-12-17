@@ -15,6 +15,50 @@ public class Pie implements Parcelable , Comparable<Pie> {
     private  String label;
     private  float number;
 
+    private  float X1;//对应Rect的left
+    private  float X2;//对应Rect的right
+
+    public void setNumber(float number) {
+        this.number = number;
+    }
+
+    public float getX1() {
+        return X1;
+    }
+
+    public void setX1(float x1) {
+        X1 = x1;
+    }
+
+    public float getX2() {
+        return X2;
+    }
+
+    public void setX2(float x2) {
+        X2 = x2;
+    }
+
+    public float getY1() {
+        return Y1;
+    }
+
+    public void setY1(float y1) {
+        Y1 = y1;
+    }
+
+    public float getY2() {
+        return Y2;
+    }
+
+    public void setY2(float y2) {
+        Y2 = y2;
+    }
+
+    private  float Y1;//对应Rect的top
+    private  float Y2;//对应Rect的bottom
+
+
+
     public int getColor() {
         return color;
     }
@@ -77,6 +121,10 @@ public class Pie implements Parcelable , Comparable<Pie> {
         dest.writeFloat(this.percent);
         dest.writeString(this.label);
         dest.writeFloat(this.number);
+        dest.writeFloat(this.X1);
+        dest.writeFloat(this.X2);
+        dest.writeFloat(this.Y1);
+        dest.writeFloat(this.Y2);
     }
 
     protected Pie(Parcel in) {
@@ -84,6 +132,10 @@ public class Pie implements Parcelable , Comparable<Pie> {
         this.percent = in.readFloat();
         this.label = in.readString();
         this.number = in.readFloat();
+        this.X1 = in.readFloat();
+        this.X2 = in.readFloat();
+        this.Y1 = in.readFloat();
+        this.Y2 = in.readFloat();
     }
 
     public static final Creator<Pie> CREATOR = new Creator<Pie>() {

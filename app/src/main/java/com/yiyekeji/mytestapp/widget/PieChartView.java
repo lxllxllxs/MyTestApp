@@ -62,7 +62,6 @@ public class PieChartView extends View {
         circlePaint.setStyle(Paint.Style.FILL);
         circlePaint.setColor(Color.GREEN);
         circlePaint.setAntiAlias(true);
-        circlePaint.setTextSize(25);
     }
     float[] origin=new float[2];
     int screenHeight,screenWeight;
@@ -84,6 +83,9 @@ public class PieChartView extends View {
         origin[1]=height/4;
         outRadius=diameter/4;
         inRadius=outRadius/2;
+        blockSize=inRadius/3;
+
+        circlePaint.setTextSize(blockSize);
     }
     /**
      * 设置画弧的约束矩形
@@ -115,11 +117,30 @@ public class PieChartView extends View {
         if (!isReady){
             return;
         }
+
+
+
+        numberWidht = circlePaint.measureText(datas.get(0).getNumber()+"");
+        percentWidth = circlePaint.measureText(formatPercent(datas.get(0).getPercent()));
+        for (Pie pie : datas) {
+            if (labelWidth<circlePaint.measureText(pie.getLabel())){
+                labelWidth=circlePaint.measureText(pie.getLabel());
+            }
+        }
+
         if (datas.size() >= 13 && (wholeLableWidth <rectF.width()/2)) {
             mLabelType = LABEL_TYPE_DOUBLE;
         } else {
             mLabelType = LABEL_TYPE_SINGLE;
         }
+        /**
+         * 如果小于7个Pie或整label宽度超过控件的/2采用单列
+         * 如果大于或等于 7个Pie,采用双列
+         */
+        //这里作为整个label矩形区域的 判断依据
+        wholeLableWidth  = 4 * blockSize+ labelWidth + numberWidht + percentWidth;
+        LogUtils.d("maxWidth", wholeLableWidth + "=" + rectF.width());
+
         //为了校准用的矩形
         circlePaint.setColor(Color.WHITE);
         canvas.drawRect(rectF,circlePaint);
@@ -145,6 +166,7 @@ public class PieChartView extends View {
      * 应该用Pie记录其所在坐标区域，从而设置点击事件
      * @param canvas
      */
+    private   float blockSize;
     private void drawLabel(Canvas canvas) {
         RectF rect=null;
         int count=1;//要从1开始
@@ -156,29 +178,34 @@ public class PieChartView extends View {
                     if (count % 2 != 0) {
                         rect.left = origin[0] - ((int) rectF.width()) / 2;
                         rect.top = rectF.bottom + ((count + 1) / 2) * (inRadius / 2);
-                        rect.bottom = rect.top + inRadius / 4;
-                        rect.right = rect.left + inRadius / 4;
+                        rect.bottom = rect.top +blockSize ;
+                        rect.right = rect.left + blockSize;
                         LogUtils.d("drawLabel", "左");
                     } else {
                         //右边应该以左边末+2个方块 +label里的3个方块
                         rect.left = 5*inRadius/4+wholeLableWidth+rectF.left;
                         rect.top = rectF.bottom + (count / 2) * (inRadius / 2);
-                        rect.bottom = rect.top + inRadius / 4;
-                        rect.right = rect.left + inRadius / 4;
+                        rect.bottom = rect.top + blockSize;
+                        rect.right = rect.left + blockSize;
                         LogUtils.d("drawLabel", "右");
                     }
                     break;
                 case LABEL_TYPE_SINGLE:
-                    rect.left = origin[0] - ((int) rectF.width()) / 4 - inRadius / 4;
+                    rect.left = origin[0] - ((int) rectF.width()) / 4 - blockSize;
                     rect.top = rectF.bottom + count * (inRadius / 2);
-                    rect.bottom = rect.top + inRadius / 4;
-                    rect.right = rect.left + inRadius / 4;
-                    LogUtils.d("drawLabel", "单列居中");
+                    rect.bottom = rect.top + blockSize;
+                    rect.right = rect.left + blockSize;
+
+                    pie.setX1(rect.left);
+                    pie.setX2(rect.right+wholeLableWidth);
+                    pie.setY1(rect.top);
+                    pie.setY2(rect.bottom);
+
+//                    LogUtils.d("drawLabel", "单列居中");
                     break;
             }
             //设置字体锚点
             float textAnchor=rect.right;
-            float spacing=inRadius / 4;
             canvas.drawRect(rect, circlePaint);
             circlePaint.setColor(Color.BLACK);
             Paint.FontMetricsInt fontMetrics = circlePaint.getFontMetricsInt();
@@ -187,22 +214,39 @@ public class PieChartView extends View {
 
 //            text=text.substring(0,text.indexOf(".")+3)+"%";
             //分三次画 label number  percent 为了对齐应该测算出最宽的一个 取其值
-            String label=pie.getLabel();
-            canvas.drawText(pie.getLabel(), textAnchor+spacing, baseline, circlePaint);
-
+            canvas.drawText(pie.getLabel(), textAnchor+blockSize/2, baseline, circlePaint);
             String number=(int)pie.getNumber()+"";
-            canvas.drawText(number, textAnchor+2*spacing+labelWidth, baseline, circlePaint);
-
+            canvas.drawText(number, textAnchor+blockSize/2+labelWidth, baseline, circlePaint);
             DecimalFormat decimalFormat=new DecimalFormat("#.##");//构造方法的字符格式这里如果小数不足2位,会以0补足.
             String percent=decimalFormat.format(pie.getPercent()*100);//format 返回的是字符串
 
-            canvas.drawText(percent,textAnchor+2*spacing+labelWidth+numberWidht, baseline, circlePaint);
+            canvas.drawText(percent,textAnchor+blockSize/2+labelWidth+numberWidht, baseline, circlePaint);
             count++;
 
         }
-
     }
 
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        int eventaction = event.getAction();
+
+        int x = (int)event.getX();
+        int y = (int)event.getY();
+        switch (eventaction ) {
+            case MotionEvent.ACTION_DOWN:
+                for (Pie pie : datas) {
+                    if (x < pie.getX2() && x > pie.getX1() && y < pie.getY2() && y > pie.getY1()) {
+                        LogUtils.d("PieChartView:onTouchEvent",pie.getLabel());
+                    }
+                }
+                break;
+            case MotionEvent.ACTION_MOVE:
+                break;
+            case MotionEvent.ACTION_UP:
+                break;
+        }
+        return true;
+    }
     //画内圆 当作裁剪
     private void drawInCircle(Canvas canvas) {
         circlePaint.setColor(Color.WHITE);
@@ -233,6 +277,7 @@ public class PieChartView extends View {
      * 注意在此之前必须先设置paint的textSize
      * 测量
      */
+    private final  String OTHER="其他";
     private  float wholeLableWidth;
     private  float labelWidth,numberWidht,percentWidth;
     private List<Pie> datas = new ArrayList<>();
@@ -244,27 +289,19 @@ public class PieChartView extends View {
         }
         for (Pie pie : datas) {
             pie.setPercent(total);
-            if (labelWidth<circlePaint.measureText(pie.getLabel())){
-                labelWidth=circlePaint.measureText(pie.getLabel());
-            }
         }
         //排序 从大到小排序 应该从这里取第一个直接测最宽的一个number和percent
         Collections.sort(datas);
-        numberWidht = circlePaint.measureText(datas.get(0).getNumber()+"");
-        String percent=datas.get(0).getPercent()+"";
-        percent=percent.substring(0,percent.indexOf(".")+2);
-        percentWidth = circlePaint.measureText(percent);
         total=0;
         List<Pie> tempList = new ArrayList<>();
-        int colorScale = colorMax / datas.size();
+        int colorScale = colorMax / 10;
         //根据List大小获得固定差值的颜色集合，419430
         for (int i=0; i<datas.size();i++){
-            int colors = rc.randomColor(i*colorScale,null,null);
-            datas.get(i).setColor(colors);
+            Pie pie = datas.get(i);
+            pie.setColor(Color.parseColor(colors[i]));
             if (total>=0.90){
-                datas.get(i).setColor(Color.BLACK);
-                datas.get(i).setLabel("其他");
-                datas.get(i).setDirectPercent(1 - total);
+                pie.setLabel(OTHER);
+                pie.setDirectPercent(1 - total);
                 tempList.add(datas.get(i));
                 datas = tempList;
                 break;
@@ -273,34 +310,13 @@ public class PieChartView extends View {
             total=total+datas.get(i).getPercent();
             LogUtils.d("setPercent", datas.get(i).getPercent());
         }
-        /**
-         * 如果小于13个Pie或整label宽度超过控件的/2采用单列
-         * 如果大于或等于 13个Pie,采用双列
-         */
-
-        wholeLableWidth  = 4 * inRadius / 4 + labelWidth + numberWidht + percentWidth;
-        LogUtils.d("maxWidth", wholeLableWidth + "==" + rectF.width());
         isReady = true;
         invalidate();
     }
 
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        int eventaction = event.getAction();
-
-        int X = (int)event.getX();
-        int Y = (int)event.getY();
-
-        switch (eventaction ) {
-            case MotionEvent.ACTION_DOWN:
-
-                break;
-            case MotionEvent.ACTION_MOVE:
-                break;
-            case MotionEvent.ACTION_UP:
-                break;
-        }
-        return true;
+    private String formatPercent(float f){
+        DecimalFormat decimalFormat=new DecimalFormat("#.##");//构造方法的字符格式这里如果小数不足2位,会以0补足.
+        return  decimalFormat.format(f*100);//format 返回的是字符串
     }
 
     private float measureH(int heightMeasureSpec) {
@@ -325,4 +341,10 @@ public class PieChartView extends View {
             return  size;
         }
     }
+
+    protected  final String[] colors={
+            "#FF4081","#FF9966","#F7B64A","#565E8D","#D63C0D","#3883EF",
+            "#98C782","#FF5608","#d03e4b","#008800","#4FC1E9","#00ff00",
+            "#20B2AA"
+    };
 }
