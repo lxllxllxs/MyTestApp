@@ -10,5 +10,6 @@
         android:layout_gravity="center"
         android:background="@color/white"
         android:layout_width="match_parent"
+        android:layerType="software"
         android:layout_height="800px" />
 </LinearLayout>

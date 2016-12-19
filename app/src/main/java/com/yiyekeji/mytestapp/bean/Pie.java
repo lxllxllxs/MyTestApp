@@ -14,6 +14,57 @@ public class Pie implements Parcelable , Comparable<Pie> {
     private float percent;
     private  String label;
     private  float number;
+    private boolean isShadow;
+
+    //在圆弧上的数子的坐标
+    private double numPostionX;
+    private double numPostionY;
+
+
+    public double getNumPostionX() {
+        return numPostionX;
+    }
+
+    public void setNumPostionX(double numPostionX) {
+        this.numPostionX = numPostionX;
+    }
+
+    public double getNumPostionY() {
+        return numPostionY;
+    }
+
+    public void setNumPostionY(double numPostionY) {
+        this.numPostionY = numPostionY;
+    }
+
+
+    public boolean isShadow() {
+        return isShadow;
+    }
+
+    public void setShadow(boolean shadow) {
+        isShadow = shadow;
+    }
+
+    public float getAngleStart() {
+
+        return angleStart;
+    }
+
+    public void setAngleStart(float angleStart) {
+        this.angleStart = angleStart;
+    }
+
+    public float getAngleEnd() {
+        return angleEnd;
+    }
+
+    public void setAngleEnd(float angleEnd) {
+        this.angleEnd = angleEnd;
+    }
+
+    private float angleStart;
+    private float angleEnd;
 
     private  float X1;//对应Rect的left
     private  float X2;//对应Rect的right
@@ -121,6 +172,8 @@ public class Pie implements Parcelable , Comparable<Pie> {
         dest.writeFloat(this.percent);
         dest.writeString(this.label);
         dest.writeFloat(this.number);
+        dest.writeFloat(this.angleStart);
+        dest.writeFloat(this.angleEnd);
         dest.writeFloat(this.X1);
         dest.writeFloat(this.X2);
         dest.writeFloat(this.Y1);
@@ -132,6 +185,8 @@ public class Pie implements Parcelable , Comparable<Pie> {
         this.percent = in.readFloat();
         this.label = in.readString();
         this.number = in.readFloat();
+        this.angleStart = in.readFloat();
+        this.angleEnd = in.readFloat();
         this.X1 = in.readFloat();
         this.X2 = in.readFloat();
         this.Y1 = in.readFloat();

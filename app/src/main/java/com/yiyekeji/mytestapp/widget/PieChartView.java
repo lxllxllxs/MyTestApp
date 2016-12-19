@@ -1,6 +1,7 @@
 package com.yiyekeji.mytestapp.widget;
 
 import android.content.Context;
+import android.graphics.BlurMaskFilter;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -9,7 +10,6 @@ import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
 
-import com.github.lzyzsd.randomcolor.RandomColor;
 import com.yiyekeji.mytestapp.bean.Pie;
 import com.yiyekeji.mytestapp.utils.LogUtils;
 import com.zhy.autolayout.utils.ScreenUtils;
@@ -29,7 +29,6 @@ public class PieChartView extends View {
     private Paint circlePaint;
     private Context context;
     private boolean isReady=false;
-
     /**
      * Label排列方式
      */
@@ -38,7 +37,6 @@ public class PieChartView extends View {
     private int mLabelType = LABEL_TYPE_SINGLE;
     final  float ANGLE=360;
     private final int colorMax=0xffffff;
-    RandomColor rc = new RandomColor();
 
     public PieChartView(Context context) {
         super(context);
@@ -68,6 +66,13 @@ public class PieChartView extends View {
     RectF rectF=new RectF();
     float width;
     float height;
+
+
+    private final  String OTHER="其他";
+    private  float wholeLableWidth;
+    private  float labelWidth,numberWidht,percentWidth;
+
+
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
@@ -76,14 +81,14 @@ public class PieChartView extends View {
         width =measureW(widthMeasureSpec);
         height=measureH(heightMeasureSpec);
 
-        setRectF(width,height);
-
         float diameter=width>height?height:width;
-        origin[0]=width/2;
-        origin[1]=height/4;
+
         outRadius=diameter/4;
-        inRadius=outRadius/2;
+        inRadius=2*outRadius/5;
         blockSize=inRadius/3;
+        origin[0]=width/2;
+        origin[1]=height/4+blockSize;//Y轴下降一个blockSize
+        setRectF(width,height);
 
         circlePaint.setTextSize(blockSize);
     }
@@ -98,8 +103,8 @@ public class PieChartView extends View {
         float offset=Math.abs(height/2-width)/2;
 //        if (width>height){
             //取一个正方形 为什么 500*500px的 测出来高度大于宽度？
-            rectF.bottom =height/2;//减去底部差值
-            rectF.top=0;//减去顶部差值
+            rectF.bottom =height/2+blockSize;//减去底部差值 上面隔开两个blockSize
+            rectF.top=0+blockSize;//减去顶部差值
             rectF.left=offset;
             rectF.right=width-offset;
      /*   }else {
@@ -117,9 +122,6 @@ public class PieChartView extends View {
         if (!isReady){
             return;
         }
-
-
-
         numberWidht = circlePaint.measureText(datas.get(0).getNumber()+"");
         percentWidth = circlePaint.measureText(formatPercent(datas.get(0).getPercent()));
         for (Pie pie : datas) {
@@ -138,15 +140,26 @@ public class PieChartView extends View {
          * 如果大于或等于 7个Pie,采用双列
          */
         //这里作为整个label矩形区域的 判断依据
-        wholeLableWidth  = 4 * blockSize+ labelWidth + numberWidht + percentWidth;
+        wholeLableWidth  = 3* blockSize+ labelWidth + numberWidht + percentWidth;
         LogUtils.d("maxWidth", wholeLableWidth + "=" + rectF.width());
 
         //为了校准用的矩形
         circlePaint.setColor(Color.WHITE);
         canvas.drawRect(rectF,circlePaint);
         drawArc(canvas);
+        drawArcNumber(canvas);//画圆弧上的数字
         drawInCircle(canvas);
         drawLabel(canvas);
+    }
+
+    private void drawArcNumber(Canvas canvas) {
+
+        circlePaint.setColor(Color.BLACK);
+        Paint.FontMetricsInt fontMetrics = circlePaint.getFontMetricsInt();
+        // 转载请注明出处：http://blog.csdn.net/hursing
+        for (Pie pie : datas) {
+            canvas.drawText(pie.getNumber()+"",(float) pie.getNumPostionX(),(float) pie.getNumPostionY(),circlePaint);
+        }
     }
 
     /**
@@ -216,9 +229,9 @@ public class PieChartView extends View {
             //分三次画 label number  percent 为了对齐应该测算出最宽的一个 取其值
             canvas.drawText(pie.getLabel(), textAnchor+blockSize/2, baseline, circlePaint);
             String number=(int)pie.getNumber()+"";
-            canvas.drawText(number, textAnchor+blockSize/2+labelWidth, baseline, circlePaint);
+            canvas.drawText(number, textAnchor+blockSize+labelWidth, baseline, circlePaint);
             DecimalFormat decimalFormat=new DecimalFormat("#.##");//构造方法的字符格式这里如果小数不足2位,会以0补足.
-            String percent=decimalFormat.format(pie.getPercent()*100);//format 返回的是字符串
+            String percent=decimalFormat.format(pie.getPercent()*100)+"%";//format 返回的是字符串
 
             canvas.drawText(percent,textAnchor+blockSize/2+labelWidth+numberWidht, baseline, circlePaint);
             count++;
@@ -237,6 +250,9 @@ public class PieChartView extends View {
                 for (Pie pie : datas) {
                     if (x < pie.getX2() && x > pie.getX1() && y < pie.getY2() && y > pie.getY1()) {
                         LogUtils.d("PieChartView:onTouchEvent",pie.getLabel());
+                        //设置需要shadow
+                        pie.setShadow(true);
+                        invalidate();
                     }
                 }
                 break;
@@ -247,6 +263,8 @@ public class PieChartView extends View {
         }
         return true;
     }
+
+
     //画内圆 当作裁剪
     private void drawInCircle(Canvas canvas) {
         circlePaint.setColor(Color.WHITE);
@@ -255,19 +273,46 @@ public class PieChartView extends View {
     /**
      * 画弧要记得角度的累加
      *
+     * 有阴影的arc所在的rect宽高都小1/2blockSize
      * @param canvas
      */
     private void drawArc(Canvas canvas) {
+        double x1,y1;
+        RectF rectf=new RectF();
+        rectf.top=rectF.top+blockSize/2;
+        rectf.bottom=rectF.bottom-blockSize/2;
+        rectf.left=rectF.left+blockSize/2;
+        rectf.right=rectF.right-blockSize/2;
         float totalAngle=0;
         for (int i=0;i<datas.size();i++) {
             Pie pie = datas.get(i);
             circlePaint.setColor(pie.getColor());
-            canvas.drawArc(rectF,
-                    totalAngle,
-                    pie.getPercent() * ANGLE,
-                    true, circlePaint);
+            pie.setAngleStart(totalAngle);
+            pie.setAngleEnd(pie.getPercent() * ANGLE);
+            x1=origin[0]+rectF.width()/2*Math.cos(pie.getAngleEnd());
+            y1=origin[1]+rectF.width()/2*Math.sin(pie.getAngleEnd());
+
+//            pie.setNumPostionX(x1);
+//            pie.setNumPostionY(y1);
+            if (pie.isShadow()){
+                circlePaint.setMaskFilter(
+                        new BlurMaskFilter(10f, BlurMaskFilter.Blur.SOLID));
+                pie.setShadow(false);//还原
+                canvas.drawArc(rectF,
+                        pie.getAngleStart(),
+                        pie.getAngleEnd(),
+                        true, circlePaint);
+                circlePaint.setMaskFilter(null);
+            }else {
+                canvas.drawArc(rectf,
+                        pie.getAngleStart(),
+                        pie.getAngleEnd(),
+                        true, circlePaint);
+            }
             totalAngle = totalAngle + pie.getPercent()*ANGLE;
         }
+        //取消 阴影
+        circlePaint.setMaskFilter(null);
     }
 
     /**
@@ -277,9 +322,6 @@ public class PieChartView extends View {
      * 注意在此之前必须先设置paint的textSize
      * 测量
      */
-    private final  String OTHER="其他";
-    private  float wholeLableWidth;
-    private  float labelWidth,numberWidht,percentWidth;
     private List<Pie> datas = new ArrayList<>();
     public void setDatas(List<Pie> list){
         this.datas=list;
