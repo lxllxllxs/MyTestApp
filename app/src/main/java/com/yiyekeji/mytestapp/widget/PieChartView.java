@@ -153,11 +153,16 @@ public class PieChartView extends View {
     }
 
     private void drawArcNumber(Canvas canvas) {
-
+        double x1,y1;
         circlePaint.setColor(Color.BLACK);
         Paint.FontMetricsInt fontMetrics = circlePaint.getFontMetricsInt();
         // 转载请注明出处：http://blog.csdn.net/hursing
         for (Pie pie : datas) {
+            x1=origin[0]+rectF.width()/2*Math.cos(pie.getAngleEnd()-360);
+            y1=origin[1]+rectF.width()/2*Math.sin(pie.getAngleEnd()-360);
+            pie.setNumPostionX(x1);
+            pie.setNumPostionY(y1);
+            LogUtils.d("drawNumber",pie.getAngleStart()+"==="+pie.getAngleEnd());
             canvas.drawText(pie.getNumber()+"",(float) pie.getNumPostionX(),(float) pie.getNumPostionY(),circlePaint);
         }
     }
@@ -277,7 +282,7 @@ public class PieChartView extends View {
      * @param canvas
      */
     private void drawArc(Canvas canvas) {
-        double x1,y1;
+
         RectF rectf=new RectF();
         rectf.top=rectF.top+blockSize/2;
         rectf.bottom=rectF.bottom-blockSize/2;
@@ -287,13 +292,11 @@ public class PieChartView extends View {
         for (int i=0;i<datas.size();i++) {
             Pie pie = datas.get(i);
             circlePaint.setColor(pie.getColor());
+
             pie.setAngleStart(totalAngle);
             pie.setAngleEnd(pie.getPercent() * ANGLE);
-            x1=origin[0]+rectF.width()/2*Math.cos(pie.getAngleEnd());
-            y1=origin[1]+rectF.width()/2*Math.sin(pie.getAngleEnd());
 
-//            pie.setNumPostionX(x1);
-//            pie.setNumPostionY(y1);
+
             if (pie.isShadow()){
                 circlePaint.setMaskFilter(
                         new BlurMaskFilter(10f, BlurMaskFilter.Blur.SOLID));
