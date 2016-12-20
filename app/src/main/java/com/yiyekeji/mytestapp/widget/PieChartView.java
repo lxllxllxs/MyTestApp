@@ -152,18 +152,30 @@ public class PieChartView extends View {
         drawLabel(canvas);
     }
 
+    /**
+     * 没留意到Math.sin()中的参数要转
+     * @param canvas
+     *
+     * 画数值的起点要向左偏移数值本身宽度一半的值，以把数字画在中间
+     */
     private void drawArcNumber(Canvas canvas) {
         double x1,y1;
-        circlePaint.setColor(Color.BLACK);
+        circlePaint.setColor(Color.WHITE);
         Paint.FontMetricsInt fontMetrics = circlePaint.getFontMetricsInt();
-        // 转载请注明出处：http://blog.csdn.net/hursing
+        // 所画数字是处在半径为多少的一个圆上
+        float numberRadius= 2*inRadius;
+        float width;//每个数字的宽度
+        float scale;//每个pie的中间角度
         for (Pie pie : datas) {
-            x1=origin[0]+rectF.width()/2*Math.cos(pie.getAngleEnd()-360);
-            y1=origin[1]+rectF.width()/2*Math.sin(pie.getAngleEnd()-360);
+            scale=(pie.getAngleEnd()-pie.getAngleStart())/2;
+            x1=origin[0]+numberRadius*Math.cos(Math.toRadians(pie.getAngleEnd()-scale));
+            y1=origin[1]+numberRadius*Math.sin(Math.toRadians(pie.getAngleEnd()-scale));
+            LogUtils.d("drawNumber",Math.cos(Math.toRadians(pie.getAngleEnd()))+"sin:"+Math.sin(Math.toRadians(pie.getAngleEnd())));
             pie.setNumPostionX(x1);
             pie.setNumPostionY(y1);
             LogUtils.d("drawNumber",pie.getAngleStart()+"==="+pie.getAngleEnd());
-            canvas.drawText(pie.getNumber()+"",(float) pie.getNumPostionX(),(float) pie.getNumPostionY(),circlePaint);
+            width=circlePaint.measureText(pie.getNumber()+"");
+            canvas.drawText(pie.getNumber()+"",(float) pie.getNumPostionX()-width/2,(float) pie.getNumPostionY(),circlePaint);
         }
     }
 
@@ -294,7 +306,7 @@ public class PieChartView extends View {
             circlePaint.setColor(pie.getColor());
 
             pie.setAngleStart(totalAngle);
-            pie.setAngleEnd(pie.getPercent() * ANGLE);
+            pie.setAngleEnd(totalAngle+pie.getPercent() * ANGLE);
 
 
             if (pie.isShadow()){
@@ -303,13 +315,13 @@ public class PieChartView extends View {
                 pie.setShadow(false);//还原
                 canvas.drawArc(rectF,
                         pie.getAngleStart(),
-                        pie.getAngleEnd(),
+                        pie.getAngleEnd()-pie.getAngleStart(),//第二个参数是要扫过的角度数 不是终止的角度数
                         true, circlePaint);
                 circlePaint.setMaskFilter(null);
             }else {
                 canvas.drawArc(rectf,
                         pie.getAngleStart(),
-                        pie.getAngleEnd(),
+                        pie.getAngleEnd()-pie.getAngleStart(),
                         true, circlePaint);
             }
             totalAngle = totalAngle + pie.getPercent()*ANGLE;

@@ -31,9 +31,9 @@ public class TestPieChartViewAty extends BaseActivity {
 
     private List<Pie> pieList = new ArrayList<>();
 
-    private int[] number={20,5,10,15,25};
+    private int[] number={25,25,25,25};
     private void initData() {
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < number.length; i++) {
             Pie pie = new Pie();
             pie.setNumber(number[i]);
             pie.setLabel("w" + i);
