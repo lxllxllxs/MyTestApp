@@ -221,7 +221,7 @@ public class PieChartView extends View {
                     }
                     break;
                 case LABEL_TYPE_SINGLE:
-                    rect.left = origin[0] - ((int) rectF.width()) / 4 - blockSize;
+                    rect.left = origin[0] -wholeLableWidth/2+blockSize;
                     rect.top = rectF.bottom + count * (inRadius / 2);
                     rect.bottom = rect.top + blockSize;
                     rect.right = rect.left + blockSize;
